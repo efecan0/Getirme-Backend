@@ -6,5 +6,5 @@ import com.example.getirme.dto.RestaurantDto;
 import java.util.List;
 
 public interface ICustomerService {
-    boolean register(CustomerDtoIU customerDtoIU);
+    void register(CustomerDtoIU customerDtoIU);
 }

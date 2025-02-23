@@ -36,9 +36,10 @@ public class UserServiceImpl implements IUserService {
     @Transactional
     @Override
     public AuthResponse login(AuthRequest request) throws AuthenticationException {
-           UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(request.getPhoneNumber() , request.getPassword());
+           String phoneNumber = request.getPhoneNumber().replaceAll(" " , "");
+           UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(phoneNumber, request.getPassword());
            authenticationProvider.authenticate(authenticationToken);
-           Optional<User> user = userRepository.findByPhoneNumber(request.getPhoneNumber());
+           Optional<User> user = userRepository.findByPhoneNumber(phoneNumber);
            if(user.isPresent()) {
                return refreshTokenService.generateTokens( user.get() );
            }

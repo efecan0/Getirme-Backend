@@ -6,7 +6,6 @@ import java.util.List;
 
 @Getter
 public class OrderDtoIU {
-    private Long customerId;
     private Long restaurantId;
     private List<OrderProductDtoIU> products;
 }

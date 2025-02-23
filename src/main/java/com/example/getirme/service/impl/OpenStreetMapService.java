@@ -22,7 +22,7 @@ public class OpenStreetMapService {
             return new String[]{lat, lon};
         }
 
-        throw new RuntimeException("Hatalı Adres Formatı"); // Hata durumunda
+        throw new RuntimeException("Wrong Address Format"); // Hata durumunda
     }
 
 

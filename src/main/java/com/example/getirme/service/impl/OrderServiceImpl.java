@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -50,11 +51,14 @@ public class OrderServiceImpl implements IOrderService {
 
     @Transactional
     @Override
-    public boolean createOrder(OrderDtoIU orderDtoIU) {
+    public void createOrder(OrderDtoIU orderDtoIU) {
         Customer context = (Customer) SecurityContextHolder.getContext().getAuthentication().getDetails();
         Restaurant restaurant = restaurantRepository.findById(orderDtoIU.getRestaurantId()).orElseThrow(() -> new RuntimeException("Restaurant is not found."));
-        if(context.getId() != orderDtoIU.getCustomerId()){
-            throw new RuntimeException("Customer id not match");
+        if(!context.getUserType().equals("CUSTOMER")){
+            throw new RuntimeException("User should be a customer");
+        }
+        if(restaurant.getOpeningTime().isAfter(LocalTime.now()) && restaurant.getClosingTime().isBefore(LocalTime.now())){
+            throw new RuntimeException("Outside of restaurant service hours");
         }
 
         Order order = new Order();
@@ -105,8 +109,6 @@ public class OrderServiceImpl implements IOrderService {
 
         order.setOrderProducts(orderProductList);
         orderRepository.save(order);
-
-        return true;
     }
 
     public List<OrderDto> getMyOrders(){

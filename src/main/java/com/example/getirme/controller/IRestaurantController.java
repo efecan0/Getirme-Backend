@@ -1,24 +1,26 @@
 package com.example.getirme.controller;
 
 import com.example.getirme.dto.*;
+import com.example.getirme.model.RootEntity;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 public interface IRestaurantController {
-    boolean registerRestaurant(RestaurantDtoIU restaurant);
+    ResponseEntity<RootEntity<String>> registerRestaurant(RestaurantDtoIU restaurant);
 
-    boolean createProduct(String name,
+    ResponseEntity<RootEntity<String>> createProduct(String name,
                           String description,
                           Double price,
                           MultipartFile image,
                           String selectableContentJson);
 
-    List<RestaurantDto> getRestaurantList();
+    ResponseEntity<RootEntity<List<RestaurantDto>>> getRestaurantList();
 
-    RestaurantDetailsDto getRestaurantDetails(Long id);
+    ResponseEntity<RootEntity<RestaurantDetailsDto>> getRestaurantDetails(Long id);
 
-    ProductDetailsDto getProductDetails(Long id);
+    ResponseEntity<RootEntity<ProductDetailsDto>> getProductDetails(Long id);
 
 }

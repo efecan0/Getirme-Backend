@@ -3,17 +3,19 @@ package com.example.getirme.controller.impl;
 import com.example.getirme.controller.IUserController;
 import com.example.getirme.jwt.AuthRequest;
 import com.example.getirme.jwt.AuthResponse;
+import com.example.getirme.model.RootEntity;
 import com.example.getirme.model.User;
 import com.example.getirme.repository.UserRepository;
 import com.example.getirme.service.IUserService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
 @RestController
-public class UserControllerImpl implements IUserController {
+public class UserControllerImpl extends BaseController implements IUserController {
 
     @Autowired
     private IUserService userService;
@@ -23,14 +25,8 @@ public class UserControllerImpl implements IUserController {
 
     @PostMapping("/login")
     @Override
-    public AuthResponse login(@RequestBody AuthRequest request) {
-        return userService.login(request);
+    public ResponseEntity<RootEntity<AuthResponse>> login(@RequestBody AuthRequest request) {
+        return ok(userService.login(request));
     }
 
-    @Transactional
-    @GetMapping("/getUser/{id}")
-    public User getUser(@PathVariable Long id) {
-        User user = userRepository.findById(id).orElse(null);
-        return user;
-    }
 }

@@ -24,11 +24,11 @@ public class CustomerServiceImpl implements ICustomerService {
 
 
     @Override
-    public boolean register(CustomerDtoIU customerDtoIU) {
+    public void register(CustomerDtoIU customerDtoIU) {
         Customer customer = new Customer();
         BeanUtils.copyProperties(customerDtoIU, customer);
+        customer.setPhoneNumber(customerDtoIU.getPhoneNumber().replaceAll(" " , ""));
         customer.setPassword(passwordEncoder.encode(customer.getPassword()));
         customerRepository.save(customer);
-        return true;
     }
 }

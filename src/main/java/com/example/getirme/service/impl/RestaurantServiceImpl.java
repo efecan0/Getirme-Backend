@@ -52,11 +52,11 @@ public class RestaurantServiceImpl implements IRestaurantService {
     private JwtService jwtService;
 
     @Override
-    public boolean registerRestaurant(RestaurantDtoIU restaurantDtoIU){
+    public void registerRestaurant(RestaurantDtoIU restaurantDtoIU){
 
         Restaurant restaurant = new Restaurant();
         restaurant.setName(restaurantDtoIU.getName());
-        restaurant.setPhoneNumber(restaurantDtoIU.getPhoneNumber());
+        restaurant.setPhoneNumber(restaurantDtoIU.getPhoneNumber().replaceAll(" " , ""));
         restaurant.setLocation(restaurantDtoIU.getLocation());
         restaurant.setOpeningTime(restaurantDtoIU.getOpeningTime());
         restaurant.setClosingTime(restaurantDtoIU.getClosingTime());
@@ -66,12 +66,11 @@ public class RestaurantServiceImpl implements IRestaurantService {
         FileEntity fileEntity = fileEntityService.saveFileEntity(restaurantDtoIU.getImage());
         restaurant.setImage(fileEntity);
         restaurantRepository.save(restaurant);
-        return true;
     }
 
 
     @Override
-    public boolean createProduct(ProductDtoIU productDtoIU) {
+    public void createProduct(ProductDtoIU productDtoIU) {
         try{
             User context = (User) SecurityContextHolder.getContext().getAuthentication().getDetails();
             if(context.getUserType().equals("RESTAURANT")){
@@ -122,9 +121,8 @@ public class RestaurantServiceImpl implements IRestaurantService {
                 restaurantRepository.save(restaurant);
             }
         }catch (Exception e){
-            throw new RuntimeException("Error creating product", e);
+            throw new RuntimeException("Error creating product");
         }
-        return true;
     }
 
     @Override
