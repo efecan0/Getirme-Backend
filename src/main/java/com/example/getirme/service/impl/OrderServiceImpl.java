@@ -1,6 +1,8 @@
 package com.example.getirme.service.impl;
 
 import com.example.getirme.dto.*;
+import com.example.getirme.exception.BaseException;
+import com.example.getirme.exception.ErrorMessage;
 import com.example.getirme.model.*;
 import com.example.getirme.repository.*;
 import com.example.getirme.service.IFileEntityService;
@@ -15,6 +17,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+
+import static com.example.getirme.exception.MessageType.BAD_REQUEST;
+import static com.example.getirme.exception.MessageType.NO_RECORD_EXIST;
 
 @Service
 public class OrderServiceImpl implements IOrderService {
@@ -53,12 +58,12 @@ public class OrderServiceImpl implements IOrderService {
     @Override
     public void createOrder(OrderDtoIU orderDtoIU) {
         Customer context = (Customer) SecurityContextHolder.getContext().getAuthentication().getDetails();
-        Restaurant restaurant = restaurantRepository.findById(orderDtoIU.getRestaurantId()).orElseThrow(() -> new RuntimeException("Restaurant is not found."));
+        Restaurant restaurant = restaurantRepository.findById(orderDtoIU.getRestaurantId()).orElseThrow(() -> new BaseException(new ErrorMessage(NO_RECORD_EXIST , "Restaurant is not found.")));
         if(!context.getUserType().equals("CUSTOMER")){
-            throw new RuntimeException("User should be a customer");
+            throw new BaseException(new ErrorMessage(BAD_REQUEST , "User should be a customer"));
         }
         if(restaurant.getOpeningTime().isAfter(LocalTime.now()) && restaurant.getClosingTime().isBefore(LocalTime.now())){
-            throw new RuntimeException("Outside of restaurant service hours");
+            throw new BaseException(new ErrorMessage(BAD_REQUEST , "Outside of restaurant service hours"));
         }
 
         Order order = new Order();
@@ -69,7 +74,7 @@ public class OrderServiceImpl implements IOrderService {
 
         for(OrderProductDtoIU orderProductDtoIU : orderDtoIU.getProducts() ){
             OrderProduct orderProduct = new OrderProduct();
-            Product product = productRepository.findById(orderProductDtoIU.getProductId()).orElseThrow(()-> new RuntimeException("Product not found"));
+            Product product = productRepository.findById(orderProductDtoIU.getProductId()).orElseThrow(()-> new BaseException(new ErrorMessage(NO_RECORD_EXIST , "Product not found.")));
             orderProduct.setName(product.getName());
             orderProduct.setSize(orderProductDtoIU.getSize());
             Double productPrice = orderProduct.getSize() * product.getPrice();
@@ -82,7 +87,7 @@ public class OrderServiceImpl implements IOrderService {
                         .stream()
                         .filter(obj -> selectedContentId == obj.getId())
                         .findFirst()
-                        .orElseThrow(() -> new RuntimeException("Selectable Content Not Found"));
+                        .orElseThrow(() -> new BaseException(new ErrorMessage(NO_RECORD_EXIST , "Selectable Content Not Found")));
 
                 OrderSelectedContent orderSelectedContent = new OrderSelectedContent();
                 orderSelectedContent.setName(selectableContent.getName());
@@ -93,7 +98,7 @@ public class OrderServiceImpl implements IOrderService {
                             .stream()
                             .filter(obj -> selectedContentOptionId == obj.getId())
                             .findFirst()
-                            .orElseThrow(() -> new RuntimeException("Option Not Found"));
+                            .orElseThrow(() -> new BaseException(new ErrorMessage(NO_RECORD_EXIST , "Option Not Found")));
 
                     orderSelectedContentOptions.add(selectableContentOption);
                     order.sumPrice(selectableContentOption.getPrice());
@@ -116,13 +121,13 @@ public class OrderServiceImpl implements IOrderService {
         String userType = user.getUserType();
         List<Order> orders;
         if(userType.equals("RESTAURANT")){
-            orders = orderRepository.findByRestaurantId(user.getId()).orElseThrow(() -> new RuntimeException("Restaurant not found"));
+            orders = orderRepository.findByRestaurantId(user.getId()).orElseThrow(() -> new BaseException(new ErrorMessage(NO_RECORD_EXIST , "Restaurant not found")));
         }
         else if(userType.equals("CUSTOMER")){
-            orders = orderRepository.findByCustomerId(user.getId()).orElseThrow(() -> new RuntimeException("Customer not found"));
+            orders = orderRepository.findByCustomerId(user.getId()).orElseThrow(() -> new BaseException(new ErrorMessage(NO_RECORD_EXIST , "Customer not found")));
         }
         else{
-            throw new RuntimeException("User type can be customer or restaurant");
+            throw new BaseException(new ErrorMessage(BAD_REQUEST , "User type can be customer or restaurant"));
         }
 
         List<OrderDto> orderDtoList = new ArrayList<>();
@@ -168,7 +173,7 @@ public class OrderServiceImpl implements IOrderService {
 
     @Override
     public OrderDto getOrderDetails(Long id){
-        Order order = orderRepository.findById(id).orElseThrow(() -> new RuntimeException("Order not found"));
+        Order order = orderRepository.findById(id).orElseThrow(() -> new BaseException(new ErrorMessage(NO_RECORD_EXIST , "Order not found")));
         OrderDto orderDto = new OrderDto();
 
         Customer customer = order.getCustomer();

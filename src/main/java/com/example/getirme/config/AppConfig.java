@@ -1,5 +1,7 @@
 package com.example.getirme.config;
 
+import com.example.getirme.exception.BaseException;
+import com.example.getirme.exception.ErrorMessage;
 import com.example.getirme.model.User;
 import com.example.getirme.repository.UserRepository;
 import jakarta.persistence.DiscriminatorValue;
@@ -19,6 +21,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.util.Optional;
 
+import static com.example.getirme.exception.MessageType.NO_RECORD_EXIST;
+import static com.example.getirme.exception.MessageType.UNAUTHORIZED;
+
 @Configuration
 public class AppConfig {
 
@@ -31,7 +36,6 @@ public class AppConfig {
             @Override
             public UserDetails loadUserByUsername(String phoneNumber){
                 Optional<User> optional = userRepository.findByPhoneNumber(phoneNumber);
-                System.out.println(optional.get());
                 if(optional.isPresent()) {
                     User user = optional.get();
 
@@ -43,7 +47,7 @@ public class AppConfig {
                     }
                     return user;
                 }
-                return null;
+                throw new BaseException(new ErrorMessage(UNAUTHORIZED , null));
             }
 
         };

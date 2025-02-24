@@ -1,6 +1,8 @@
 package com.example.getirme.service.impl;
 
 import com.example.getirme.dto.*;
+import com.example.getirme.exception.BaseException;
+import com.example.getirme.exception.ErrorMessage;
 import com.example.getirme.jwt.JwtService;
 import com.example.getirme.model.*;
 import com.example.getirme.repository.ProductRepository;
@@ -23,6 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import static com.example.getirme.exception.MessageType.*;
 
 @Service
 public class RestaurantServiceImpl implements IRestaurantService {
@@ -116,12 +120,12 @@ public class RestaurantServiceImpl implements IRestaurantService {
                 //We have full of selectableContentList in Product object. and in this list per item have a SelectableContentOptionList.
                 //Now can save the product on database
                 Product savedProduct = productRepository.save(product);
-                Restaurant restaurant =  restaurantRepository.findById(context.getId()).orElseThrow(() -> new RuntimeException("Restaurant not found"));
+                Restaurant restaurant =  restaurantRepository.findById(context.getId()).orElseThrow(() -> new BaseException(new ErrorMessage(NO_RECORD_EXIST , "Restaurant not found")));
                 restaurant.addProduct(savedProduct);
                 restaurantRepository.save(restaurant);
             }
         }catch (Exception e){
-            throw new RuntimeException("Error creating product");
+            throw new BaseException(new ErrorMessage(GENERAL_ERROR , "Error creating product"));
         }
     }
 
@@ -149,7 +153,7 @@ public class RestaurantServiceImpl implements IRestaurantService {
     @Override
     public RestaurantDetailsDto getRestaurantDetails(Long id){
         User context = (User) SecurityContextHolder.getContext().getAuthentication().getDetails();
-        Restaurant restaurant = restaurantRepository.findById(id).orElseThrow(() -> new RuntimeException("Restaurant Bulunamadı"));
+        Restaurant restaurant = restaurantRepository.findById(id).orElseThrow(() -> new BaseException(new ErrorMessage(NO_RECORD_EXIST , "Restaurant not found")));
         RestaurantDetailsDto restaurantDetailsDto = new RestaurantDetailsDto();
         byte[] restaurantImage = fileEntityService.fileToByteArray(restaurant.getImage());
         Double distance = openStreetMapService.calculateDistance(context.getLocation() , restaurant.getLocation());
@@ -178,7 +182,7 @@ public class RestaurantServiceImpl implements IRestaurantService {
 
     @Override
     public ProductDetailsDto getProductDetails(Long id){
-        Product product = productRepository.findById(id).orElseThrow(() -> new RuntimeException("Product Bulunamadı"));
+        Product product = productRepository.findById(id).orElseThrow(() -> new BaseException(new ErrorMessage(NO_RECORD_EXIST , "Product not found")));
         ProductDetailsDto productDetailsDto = new ProductDetailsDto();
         ProductDto productDto = new ProductDto( product.getId(), product.getName() , product.getDescription() , product.getPrice() , fileEntityService.fileToByteArray(product.getImage()));
         productDetailsDto.setProduct(productDto);

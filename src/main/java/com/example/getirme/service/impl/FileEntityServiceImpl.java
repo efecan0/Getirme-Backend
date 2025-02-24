@@ -1,5 +1,7 @@
 package com.example.getirme.service.impl;
 
+import com.example.getirme.exception.BaseException;
+import com.example.getirme.exception.ErrorMessage;
 import com.example.getirme.model.FileEntity;
 import com.example.getirme.repository.FileEntityRepository;
 import com.example.getirme.service.IFileEntityService;
@@ -16,6 +18,9 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Base64;
 import java.util.UUID;
+
+import static com.example.getirme.exception.MessageType.GENERAL_ERROR;
+import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 
 @Service
 public class FileEntityServiceImpl implements IFileEntityService {
@@ -48,7 +53,7 @@ public class FileEntityServiceImpl implements IFileEntityService {
             return fileEntityRepository.save(fileEntity);
 
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new BaseException(new ErrorMessage(GENERAL_ERROR , null));
         }
     }
 
@@ -57,7 +62,7 @@ public class FileEntityServiceImpl implements IFileEntityService {
             Path filePath = Paths.get(uploadDir).resolve(fileEntity.getData());
             return Files.readAllBytes(filePath);
         }catch (IOException e){
-            throw new RuntimeException("IOException while reading file");
+            throw new BaseException(new ErrorMessage(GENERAL_ERROR , null));
         }
     }
 

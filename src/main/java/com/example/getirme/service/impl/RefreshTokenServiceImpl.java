@@ -1,5 +1,7 @@
 package com.example.getirme.service.impl;
 
+import com.example.getirme.exception.BaseException;
+import com.example.getirme.exception.ErrorMessage;
 import com.example.getirme.jwt.AuthResponse;
 import com.example.getirme.jwt.JwtService;
 import com.example.getirme.model.RefreshToken;
@@ -11,6 +13,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.UUID;
+
+import static com.example.getirme.exception.MessageType.FORBIDDEN;
+import static com.example.getirme.exception.MessageType.NO_RECORD_EXIST;
 
 @Service
 public class RefreshTokenServiceImpl implements IRefreshTokenService {
@@ -24,11 +29,11 @@ public class RefreshTokenServiceImpl implements IRefreshTokenService {
     @Override
     public AuthResponse refreshToken(String refreshToken) {
 
-        RefreshToken dbRefreshToken = refreshTokenRepository.findByRefreshToken(refreshToken).orElseThrow(() -> new RuntimeException("Refresh token not found"));
+        RefreshToken dbRefreshToken = refreshTokenRepository.findByRefreshToken(refreshToken).orElseThrow(() -> new BaseException(new ErrorMessage(NO_RECORD_EXIST , "Token not found")));
         if(dbRefreshToken.getExpireDate().before(new Date())){
             return generateTokens(dbRefreshToken.getUser());
         }
-        throw new RuntimeException("Refresh token expired");
+        throw new BaseException(new ErrorMessage(FORBIDDEN , "Expired token"));
     }
 
     public String generateAndSaveRefreshToken(User user){

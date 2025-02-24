@@ -1,5 +1,7 @@
 package com.example.getirme.jwt;
 
+import com.example.getirme.exception.BaseException;
+import com.example.getirme.exception.ErrorMessage;
 import com.example.getirme.repository.UserRepository;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
@@ -17,6 +19,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Optional;
+
+import static com.example.getirme.exception.MessageType.*;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -37,7 +41,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if(header == null || !header.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
-            return;
+            throw new BaseException(new ErrorMessage(UNAUTHORIZED , null));
         }
 
         try{
@@ -54,10 +58,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         }
         catch(ExpiredJwtException e){
-            throw new RuntimeException("EXPIRED JWT TOKEN");
+            throw new BaseException(new ErrorMessage(UNAUTHORIZED , null));
         }
         catch (Exception e){
-            throw new RuntimeException("GENERAL JWT ERROR");
+            throw new BaseException(new ErrorMessage(GENERAL_ERROR , null));
         }
         filterChain.doFilter(request, response);
     }

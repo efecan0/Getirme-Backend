@@ -1,7 +1,11 @@
 package com.example.getirme.service.impl;
 
+import com.example.getirme.exception.BaseException;
+import com.example.getirme.exception.ErrorMessage;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
+import static com.example.getirme.exception.MessageType.BAD_REQUEST;
 
 @Service
 public class OpenStreetMapService {
@@ -22,7 +26,7 @@ public class OpenStreetMapService {
             return new String[]{lat, lon};
         }
 
-        throw new RuntimeException("Wrong Address Format"); // Hata durumunda
+        throw new BaseException(new ErrorMessage(BAD_REQUEST , "Wrong Address Format"));
     }
 
 
