@@ -7,9 +7,14 @@ import com.example.getirme.model.SelectableContentOption;
 import com.example.getirme.service.IRestaurantService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,6 +23,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/restaurant")
+@Validated
 public class RestaurantControllerImpl extends BaseController implements IRestaurantController {
 
     @Autowired
@@ -25,18 +31,18 @@ public class RestaurantControllerImpl extends BaseController implements IRestaur
 
     @PostMapping("/register")
     @Override
-    public ResponseEntity<RootEntity<String>> registerRestaurant(@ModelAttribute RestaurantDtoIU restaurant) {
+    public ResponseEntity<RootEntity<String>> registerRestaurant(@Valid @ModelAttribute RestaurantDtoIU restaurant) {
         restaurantService.registerRestaurant(restaurant);
         return ok("Registered Successfully.");
     }
 
     @PostMapping("/createProduct")
     @Override
-    public ResponseEntity<RootEntity<String>> createProduct( @RequestParam("name") String name,
-                                  @RequestParam("description") String description,
-                                  @RequestParam("price") Double price,
-                                  @RequestParam("image") MultipartFile image,
-                                  @RequestParam("selectableContentOptionMap") String selectableContentOptionJson) {
+    public ResponseEntity<RootEntity<String>> createProduct( @RequestParam("name") @NotBlank(message = "Name cannot be blank") String name,
+                                                             @RequestParam("description") @NotBlank(message = "Description cannot be blank") String description,
+                                                             @RequestParam("price") @NotNull(message = "Price cannot be null") @Positive(message = "Price must be greater than zero") Double price,
+                                                             @RequestParam("image") @NotNull(message = "Image cannot be null") MultipartFile image,
+                                                             @RequestParam("selectableContentOptionMap") @NotBlank(message = "Selectable content JSON cannot be blank") String selectableContentOptionJson) {
         try {
             // JSON String'ini HashMap<String, List<SelectableContentOptionDtoIU>> tipine çevir
             ObjectMapper objectMapper = new ObjectMapper();

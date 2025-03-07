@@ -8,6 +8,7 @@ import com.example.getirme.model.User;
 import com.example.getirme.repository.UserRepository;
 import com.example.getirme.service.IUserService;
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,7 +26,7 @@ public class UserControllerImpl extends BaseController implements IUserControlle
 
     @PostMapping("/login")
     @Override
-    public ResponseEntity<RootEntity<AuthResponse>> login(@RequestBody AuthRequest request) {
+    public ResponseEntity<RootEntity<AuthResponse>> login(@Valid @RequestBody AuthRequest request) {
         return ok(userService.login(request));
     }
 

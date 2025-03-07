@@ -5,6 +5,7 @@ import com.example.getirme.dto.CustomerDtoIU;
 import com.example.getirme.dto.RestaurantDto;
 import com.example.getirme.model.RootEntity;
 import com.example.getirme.service.ICustomerService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +26,7 @@ public class CustomerControllerImpl extends BaseController implements ICustomerC
 
     @PostMapping("/register")
     @Override
-    public ResponseEntity<RootEntity<String>> register(@RequestBody CustomerDtoIU customerDto) {
+    public ResponseEntity<RootEntity<String>> register(@Valid @RequestBody CustomerDtoIU customerDto) {
         customerService.register(customerDto);
         return ok("Registered successfully.");
     }

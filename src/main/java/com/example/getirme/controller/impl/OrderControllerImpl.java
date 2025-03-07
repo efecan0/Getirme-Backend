@@ -5,6 +5,7 @@ import com.example.getirme.dto.OrderDto;
 import com.example.getirme.dto.OrderDtoIU;
 import com.example.getirme.model.RootEntity;
 import com.example.getirme.service.IOrderService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +21,7 @@ public class OrderControllerImpl extends BaseController implements IOrderControl
 
     @PostMapping("/createOrder")
     @Override
-    public ResponseEntity<RootEntity<String>> createOrder(@RequestBody OrderDtoIU order) {
+    public ResponseEntity<RootEntity<String>> createOrder(@Valid @RequestBody OrderDtoIU order) {
         orderService.createOrder(order);
         return ok("Order Created Successfully");
     }

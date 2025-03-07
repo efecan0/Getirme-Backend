@@ -1,5 +1,7 @@
 package com.example.getirme.dto;
 
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,8 +15,15 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrderProductDtoIU {
+
+    @NotNull(message = "Size cannot be null")
     private Long size;
+
+    @NotNull(message = "Product ID cannot be null")
     private Long productId;
-    //key is selectable content, value is option
-    Map<Long, List<Long>> selectableContentMap;
+
+    @NotEmpty(message = "Selectable content map cannot be empty")
+    private Map<Long, List<Long>> selectableContentMap;
+
 }
+
