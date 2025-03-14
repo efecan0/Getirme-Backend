@@ -56,7 +56,7 @@ public class OrderServiceImpl implements IOrderService {
 
     @Transactional
     @Override
-    public void createOrder(OrderDtoIU orderDtoIU) {
+    public OrderDto createOrder(OrderDtoIU orderDtoIU) {
         Customer context = (Customer) SecurityContextHolder.getContext().getAuthentication().getDetails();
         Restaurant restaurant = restaurantRepository.findById(orderDtoIU.getRestaurantId()).orElseThrow(() -> new BaseException(new ErrorMessage(NO_RECORD_EXIST , "Restaurant is not found.")));
         if(!context.getUserType().equals("CUSTOMER")){
@@ -114,6 +114,7 @@ public class OrderServiceImpl implements IOrderService {
 
         order.setOrderProducts(orderProductList);
         orderRepository.save(order);
+        return convertOrderToDto(order);
     }
 
     public List<OrderDto> getMyOrders(){
@@ -132,43 +133,53 @@ public class OrderServiceImpl implements IOrderService {
 
         List<OrderDto> orderDtoList = new ArrayList<>();
         for(Order order : orders){
-            OrderDto orderDto = new OrderDto();
-            Customer customer = order.getCustomer();
-            Restaurant restaurant = order.getRestaurant();
-            CustomerDto customerDto = new CustomerDto(customer.getName() , customer.getSurname() , customer.getLocation());
-            Double distance = openStreetMapService.calculateDistance(customer.getLocation() , restaurant.getLocation());
-            RestaurantDto restaurantDto = new RestaurantDto();
-            if(distance <= restaurant.getMaxServiceDistance()){
-                Double minServicePrice = distance * restaurant.getMinServicePricePerKm();
-                restaurantDto.setId(restaurant.getId());
-                restaurantDto.setName(restaurant.getName());
-                restaurantDto.setLocation(restaurant.getLocation());
-                restaurantDto.setOpeningTime(restaurant.getOpeningTime());
-                restaurantDto.setClosingTime(restaurant.getClosingTime());
-                restaurantDto.setImage(fileEntityService.fileToByteArray(restaurant.getImage()));
-                restaurantDto.setDistance(distance);
-                restaurantDto.setMinServicePrice(minServicePrice);
-            }
-
-
-            orderDto.setCustomer(customerDto);
-            orderDto.setRestaurant(restaurantDto);
-            orderDto.setId(order.getId());
-            orderDto.setTotalPrice(order.getTotalPrice());
-            orderDto.setDate(order.getDate());
-            List<OrderProductDto> orderProductDtoList = new ArrayList<>();
-            for(OrderProduct orderProduct : order.getOrderProducts()){
-                OrderProductDto orderProductDto = new OrderProductDto();
-                orderProductDto.setId(orderProduct.getId());
-                orderProductDto.setName(orderProduct.getName());
-                orderProductDto.setSize(orderProduct.getSize());
-                orderProductDtoList.add(orderProductDto);
-            }
-
-            orderDto.setOrderProducts(orderProductDtoList);
+            OrderDto orderDto = convertOrderToDto(order);
             orderDtoList.add(orderDto);
         }
         return orderDtoList;
+    }
+
+    private OrderDto convertOrderToDto(Order order) {
+        OrderDto orderDto = new OrderDto();
+        Customer customer = order.getCustomer();
+        Restaurant restaurant = order.getRestaurant();
+        CustomerDto customerDto = new CustomerDto(customer.getName() , customer.getSurname() , customer.getLocation());
+        Double distance = openStreetMapService.calculateDistance(customer.getLocation() , restaurant.getLocation());
+        RestaurantDto restaurantDto = new RestaurantDto();
+        if(distance <= restaurant.getMaxServiceDistance()){
+            Double minServicePrice = distance * restaurant.getMinServicePricePerKm();
+            restaurantDto.setId(restaurant.getId());
+            restaurantDto.setName(restaurant.getName());
+            restaurantDto.setLocation(restaurant.getLocation());
+            restaurantDto.setOpeningTime(restaurant.getOpeningTime());
+            restaurantDto.setClosingTime(restaurant.getClosingTime());
+            restaurantDto.setImage(fileEntityService.fileToByteArray(restaurant.getImage()));
+            restaurantDto.setDistance(distance);
+            restaurantDto.setMinServicePrice(minServicePrice);
+        }
+
+
+        orderDto.setCustomer(customerDto);
+        orderDto.setRestaurant(restaurantDto);
+        orderDto.setId(order.getId());
+        orderDto.setTotalPrice(order.getTotalPrice());
+        orderDto.setDate(order.getDate());
+        List<OrderProductDto> orderProductDtoList = convertOrderProductToDtoList(order);
+
+        orderDto.setOrderProducts(orderProductDtoList);
+        return orderDto;
+    }
+
+    private static List<OrderProductDto> convertOrderProductToDtoList(Order order) {
+        List<OrderProductDto> orderProductDtoList = new ArrayList<>();
+        for(OrderProduct orderProduct : order.getOrderProducts()){
+            OrderProductDto orderProductDto = new OrderProductDto();
+            orderProductDto.setId(orderProduct.getId());
+            orderProductDto.setName(orderProduct.getName());
+            orderProductDto.setSize(orderProduct.getSize());
+            orderProductDtoList.add(orderProductDto);
+        }
+        return orderProductDtoList;
     }
 
     @Override

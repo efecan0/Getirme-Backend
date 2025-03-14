@@ -6,7 +6,7 @@ import com.example.getirme.dto.OrderDtoIU;
 import java.util.List;
 
 public interface IOrderService {
-    void createOrder(OrderDtoIU order);
+    OrderDto createOrder(OrderDtoIU order);
     List<OrderDto> getMyOrders();
     OrderDto getOrderDetails(Long id);
 }

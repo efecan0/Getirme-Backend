@@ -19,6 +19,7 @@ public class SecurityConfig {
     protected static final String RESTAURANT_REGISTER_URL = "/restaurant/register";
     protected static final String CUSTOMER_REGISTER_URL = "/customer/register";
     protected static final String REFRESH_TOKEN_URL = "/refreshToken";
+    protected static final String WEBSOCKET_URL = "/ws/**";
 
     @Autowired
     private AuthenticationProvider authenticationProvider;
@@ -29,7 +30,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable()).authorizeHttpRequests(request ->
-                request.requestMatchers(LOGIN_URL , RESTAURANT_REGISTER_URL , REFRESH_TOKEN_URL , CUSTOMER_REGISTER_URL, "/getUser/{id}").permitAll().anyRequest().authenticated())
+                request.requestMatchers(LOGIN_URL , RESTAURANT_REGISTER_URL , REFRESH_TOKEN_URL , CUSTOMER_REGISTER_URL, WEBSOCKET_URL).permitAll().anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthenticationFilter , UsernamePasswordAuthenticationFilter.class);
