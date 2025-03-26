@@ -49,13 +49,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         header = request.getHeader("Authorization");
 
-        String path = request.getRequestURI();
-
-        if(path.equals("/restaurant/register") ){
-            filterChain.doFilter(request, response);
-            return;
-        }
-
         if(header == null || !header.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             throw new BaseException(new ErrorMessage(UNAUTHORIZED , null));
