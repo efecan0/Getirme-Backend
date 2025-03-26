@@ -29,11 +29,15 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.disable()).authorizeHttpRequests(request ->
-                request.requestMatchers(LOGIN_URL , RESTAURANT_REGISTER_URL , REFRESH_TOKEN_URL , CUSTOMER_REGISTER_URL, WEBSOCKET_URL).permitAll().anyRequest().authenticated())
+        http.csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(request -> request
+                        .requestMatchers(LOGIN_URL, RESTAURANT_REGISTER_URL, REFRESH_TOKEN_URL, CUSTOMER_REGISTER_URL, WEBSOCKET_URL).permitAll()
+                        .anyRequest().authenticated()
+                )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtAuthenticationFilter , UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 

@@ -14,7 +14,7 @@ import lombok.Setter;
 public class AuthRequest {
 
     @NotBlank(message = "Phone number cannot be blank")
-    @Pattern(regexp = "^5\\d{9}$", message = "Phone number must be 10 digits and start with 5")
+    @Pattern(regexp = "5[0-9]{9}", message = "Phone number must be 10 digits and start with 5")
     private String phoneNumber;
 
     @NotBlank(message = "Password cannot be blank")
