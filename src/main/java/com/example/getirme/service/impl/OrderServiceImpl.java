@@ -25,16 +25,7 @@ import static com.example.getirme.exception.MessageType.NO_RECORD_EXIST;
 public class OrderServiceImpl implements IOrderService {
 
     @Autowired
-    private CustomerRepository customerRepository;
-
-    @Autowired
     private RestaurantRepository restaurantRepository;
-
-    @Autowired
-    private SelectableContentRepository selectableContentRepository;
-
-    @Autowired
-    private SelectableContentOptionRepository selectableContentOptionRepository;
 
     @Autowired
     private OrderSelectedContentRepository orderSelectedContentRepository;
@@ -56,14 +47,15 @@ public class OrderServiceImpl implements IOrderService {
 
     @Transactional
     @Override
-    public OrderDto createOrder(OrderDtoIU orderDtoIU) {
-        Customer context = (Customer) SecurityContextHolder.getContext().getAuthentication().getDetails();
+    public OrderDto createOrder(OrderDtoIU orderDtoIU , Customer context) {
         Restaurant restaurant = restaurantRepository.findById(orderDtoIU.getRestaurantId()).orElseThrow(() -> new BaseException(new ErrorMessage(NO_RECORD_EXIST , "Restaurant is not found.")));
-        if(!context.getUserType().equals("CUSTOMER")){
-            throw new BaseException(new ErrorMessage(BAD_REQUEST , "User should be a customer"));
-        }
         if(restaurant.getOpeningTime().isAfter(LocalTime.now()) && restaurant.getClosingTime().isBefore(LocalTime.now())){
             throw new BaseException(new ErrorMessage(BAD_REQUEST , "Outside of restaurant service hours"));
+        }
+
+        Double distance = openStreetMapService.calculateDistance(context.getLocation() , restaurant.getLocation());
+        if(distance > restaurant.getMaxServiceDistance()){
+            throw new BaseException(new ErrorMessage(BAD_REQUEST , "You are outside the restaurant service range."));
         }
 
         Order order = new Order();
@@ -71,6 +63,7 @@ public class OrderServiceImpl implements IOrderService {
         order.setRestaurant(restaurant);
         order.setDate(new Date());
         List<OrderProduct> orderProductList = new ArrayList<>();
+        List<OrderSelectedContent> orderSelectedContentList = new ArrayList<>();
 
         for(OrderProductDtoIU orderProductDtoIU : orderDtoIU.getProducts() ){
             OrderProduct orderProduct = new OrderProduct();
@@ -79,7 +72,6 @@ public class OrderServiceImpl implements IOrderService {
             orderProduct.setSize(orderProductDtoIU.getSize());
             Double productPrice = orderProduct.getSize() * product.getPrice();
             order.sumPrice(productPrice);
-            List<OrderSelectedContent> orderSelectedContentList = new ArrayList<>();
             Map<Long , List<Long>> selectedContentMap = orderProductDtoIU.getSelectableContentMap();
             for(Long selectedContentId : selectedContentMap.keySet() ){
 
@@ -104,15 +96,14 @@ public class OrderServiceImpl implements IOrderService {
                     order.sumPrice(selectableContentOption.getPrice());
                 }
                 orderSelectedContent.setOrderOptions(orderSelectedContentOptions);
-                OrderSelectedContent savedOrderSelectedContent = orderSelectedContentRepository.save(orderSelectedContent);
-                orderSelectedContentList.add(savedOrderSelectedContent);
+                orderSelectedContentList.add(orderSelectedContent);
             }
             orderProduct.setSelectedContents(orderSelectedContentList);
-            OrderProduct savedOrderProduct = orderProductRepository.save(orderProduct);
-            orderProductList.add(savedOrderProduct);
+            orderProductList.add(orderProduct);
         }
-
-        order.setOrderProducts(orderProductList);
+        orderSelectedContentRepository.saveAll(orderSelectedContentList);
+        List<OrderProduct> savedOrderProductList = orderProductRepository.saveAll(orderProductList);
+        order.setOrderProducts(savedOrderProductList);
         orderRepository.save(order);
         return convertOrderToDto(order);
     }
@@ -128,7 +119,7 @@ public class OrderServiceImpl implements IOrderService {
             orders = orderRepository.findByCustomerId(user.getId()).orElseThrow(() -> new BaseException(new ErrorMessage(NO_RECORD_EXIST , "Customer not found")));
         }
         else{
-            throw new BaseException(new ErrorMessage(BAD_REQUEST , "User type can be customer or restaurant"));
+            throw new BaseException(new ErrorMessage(BAD_REQUEST , "User type can be customer or restaurant."));
         }
 
         List<OrderDto> orderDtoList = new ArrayList<>();
@@ -142,25 +133,8 @@ public class OrderServiceImpl implements IOrderService {
     private OrderDto convertOrderToDto(Order order) {
         OrderDto orderDto = new OrderDto();
         Customer customer = order.getCustomer();
-        Restaurant restaurant = order.getRestaurant();
         CustomerDto customerDto = new CustomerDto(customer.getName() , customer.getSurname() , customer.getLocation());
-        Double distance = openStreetMapService.calculateDistance(customer.getLocation() , restaurant.getLocation());
-        RestaurantDto restaurantDto = new RestaurantDto();
-        if(distance <= restaurant.getMaxServiceDistance()){
-            Double minServicePrice = distance * restaurant.getMinServicePricePerKm();
-            restaurantDto.setId(restaurant.getId());
-            restaurantDto.setName(restaurant.getName());
-            restaurantDto.setLocation(restaurant.getLocation());
-            restaurantDto.setOpeningTime(restaurant.getOpeningTime());
-            restaurantDto.setClosingTime(restaurant.getClosingTime());
-            restaurantDto.setImage(fileEntityService.fileToByteArray(restaurant.getImage()));
-            restaurantDto.setDistance(distance);
-            restaurantDto.setMinServicePrice(minServicePrice);
-        }
-
-
         orderDto.setCustomer(customerDto);
-        orderDto.setRestaurant(restaurantDto);
         orderDto.setId(order.getId());
         orderDto.setTotalPrice(order.getTotalPrice());
         orderDto.setDate(order.getDate());

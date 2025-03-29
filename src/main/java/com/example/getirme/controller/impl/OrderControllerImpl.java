@@ -3,6 +3,9 @@ package com.example.getirme.controller.impl;
 import com.example.getirme.controller.IOrderController;
 import com.example.getirme.dto.OrderDto;
 import com.example.getirme.dto.OrderDtoIU;
+import com.example.getirme.exception.BaseException;
+import com.example.getirme.exception.ErrorMessage;
+import com.example.getirme.model.Customer;
 import com.example.getirme.model.Order;
 import com.example.getirme.model.RootEntity;
 import com.example.getirme.service.IOrderService;
@@ -11,9 +14,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
+import static com.example.getirme.exception.MessageType.BAD_REQUEST;
 
 @RestController
 public class OrderControllerImpl extends BaseController implements IOrderController {
@@ -27,7 +33,13 @@ public class OrderControllerImpl extends BaseController implements IOrderControl
     @PostMapping("/createOrder")
     @Override
     public ResponseEntity<RootEntity<String>> createOrder(@Valid @RequestBody OrderDtoIU order) {
-        OrderDto savedOrder = orderService.createOrder(order);
+
+        Customer context = (Customer) SecurityContextHolder.getContext().getAuthentication().getDetails();
+
+        if(!context.getUserType().equals("CUSTOMER")){
+            throw new BaseException(new ErrorMessage(BAD_REQUEST , "User should be a customer"));
+        }
+        OrderDto savedOrder = orderService.createOrder(order , context);
         String userId = String.valueOf(order.getRestaurantId());
         messagingTemplate.convertAndSendToUser(userId , "/queue/orders" , savedOrder);
         return ok("Order Created Successfully");

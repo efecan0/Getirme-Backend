@@ -1,7 +1,5 @@
 package com.example.getirme.dto;
 
-import com.example.getirme.model.OrderSelectedContent;
-import jakarta.persistence.ManyToMany;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

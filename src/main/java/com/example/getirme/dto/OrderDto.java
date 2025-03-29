@@ -1,10 +1,5 @@
 package com.example.getirme.dto;
 
-import com.example.getirme.model.Customer;
-import com.example.getirme.model.OrderProduct;
-import com.example.getirme.model.Restaurant;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
