@@ -5,6 +5,7 @@ import com.example.getirme.exception.ErrorMessage;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,21 +39,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String header;
-        String token;
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {;
+        String token = null;
         String phoneNumber;
 
-        header = request.getHeader("Authorization");
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("accessToken".equals(cookie.getName())) {
+                    token = cookie.getValue();
+                    break;
+                }
+            }
+        }
 
-        if(header == null || !header.startsWith("Bearer ")) {
+        if(token == null) {
             filterChain.doFilter(request, response);
             throw new BaseException(new ErrorMessage(UNAUTHORIZED , null));
         }
 
         try{
-
-            token = header.substring(7);
             phoneNumber = jwtService.getPhoneNumberByToken(token);
 
             if(token != null && phoneNumber != null && SecurityContextHolder.getContext().getAuthentication() == null && !jwtService.isTokenExpired(token)) {

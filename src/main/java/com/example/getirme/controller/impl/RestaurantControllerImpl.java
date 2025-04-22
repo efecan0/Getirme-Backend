@@ -43,7 +43,7 @@ public class RestaurantControllerImpl extends BaseController implements IRestaur
                                                              @RequestParam("description")String description,
                                                              @RequestParam("price") Double price,
                                                              @RequestParam("image") MultipartFile image,
-                                                             @RequestParam("selectableContentOptionMap") String selectableContentOptionJson) {
+                                                             @RequestParam("selectableContentOptionMap") String selectableContentOptionJson) {  
         try {
             // JSON String'ini HashMap<String, List<SelectableContentOptionDtoIU>> tipine çevir
             ObjectMapper objectMapper = new ObjectMapper();
