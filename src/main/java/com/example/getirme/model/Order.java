@@ -33,7 +33,11 @@ public class Order {
     @ManyToMany
     private List<OrderProduct> orderProducts;
 
+    @Enumerated(EnumType.STRING)
+    private OrderStatus status;
 
+    @Column
+    private Integer progress;
 
     public void sumPrice(Double price){
         this.totalPrice += price;

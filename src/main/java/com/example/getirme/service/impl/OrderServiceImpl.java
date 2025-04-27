@@ -9,6 +9,7 @@ import com.example.getirme.service.IFileEntityService;
 import com.example.getirme.service.IOrderService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -59,6 +60,7 @@ public class OrderServiceImpl implements IOrderService {
         }
 
         Order order = new Order();
+        order.setStatus(OrderStatus.PENDING);
         order.setCustomer(context);
         order.setRestaurant(restaurant);
         order.setDate(new Date());
@@ -101,6 +103,11 @@ public class OrderServiceImpl implements IOrderService {
             orderProduct.setSelectedContents(orderSelectedContentList);
             orderProductList.add(orderProduct);
         }
+
+        if(order.getTotalPrice() < restaurant.getMinServicePricePerKm() * distance){
+            throw new BaseException(new ErrorMessage(BAD_REQUEST , "Your Order is less then our minimum service price"));
+        }
+
         orderSelectedContentRepository.saveAll(orderSelectedContentList);
         List<OrderProduct> savedOrderProductList = orderProductRepository.saveAll(orderProductList);
         order.setOrderProducts(savedOrderProductList);
@@ -112,37 +119,60 @@ public class OrderServiceImpl implements IOrderService {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getDetails();
         String userType = user.getUserType();
         List<Order> orders;
-        if(userType.equals("RESTAURANT")){
-            orders = orderRepository.findByRestaurantId(user.getId()).orElseThrow(() -> new BaseException(new ErrorMessage(NO_RECORD_EXIST , "Restaurant not found")));
-        }
-        else if(userType.equals("CUSTOMER")){
-            orders = orderRepository.findByCustomerId(user.getId()).orElseThrow(() -> new BaseException(new ErrorMessage(NO_RECORD_EXIST , "Customer not found")));
-        }
-        else{
+        List<OrderStatus> excludedStatuses = List.of(OrderStatus.DELIVERED, OrderStatus.CANCELLED);
+
+        if(userType.equals("RESTAURANT")) {
+            orders = orderRepository.findActiveOrdersByRestaurantId(user.getId(), excludedStatuses)
+                    .orElseThrow(() -> new BaseException(new ErrorMessage(NO_RECORD_EXIST, "No active orders found")));
+        }else if(userType.equals("CUSTOMER")) {
+                orders = orderRepository.findActiveOrdersByCustomerId(user.getId(), excludedStatuses)
+                        .orElseThrow(() -> new BaseException(new ErrorMessage(NO_RECORD_EXIST, "No active orders found")));
+            }
+                else{
             throw new BaseException(new ErrorMessage(BAD_REQUEST , "User type can be customer or restaurant."));
         }
 
-        List<OrderDto> orderDtoList = new ArrayList<>();
-        for(Order order : orders){
-            OrderDto orderDto = convertOrderToDto(order);
-            orderDtoList.add(orderDto);
-        }
-        return orderDtoList;
+        return orders.stream()
+                .map(this::convertOrderToDto)
+                .toList();
     }
 
     private OrderDto convertOrderToDto(Order order) {
         OrderDto orderDto = new OrderDto();
         Customer customer = order.getCustomer();
-        CustomerDto customerDto = new CustomerDto(customer.getName() , customer.getSurname() , customer.getLocation());
+        Restaurant restaurant = order.getRestaurant();
+
+        CustomerDto customerDto = new CustomerDto(customer.getName(), customer.getSurname(), customer.getLocation());
         orderDto.setCustomer(customerDto);
+
+        if (restaurant != null) {
+            Double distance = openStreetMapService.calculateDistance(customer.getLocation(), restaurant.getLocation());
+            Double minServicePrice = distance * restaurant.getMinServicePricePerKm();
+
+            RestaurantDto restaurantDto = new RestaurantDto();
+            restaurantDto.setId(restaurant.getId());
+            restaurantDto.setName(restaurant.getName());
+            restaurantDto.setLocation(restaurant.getLocation());
+            restaurantDto.setOpeningTime(restaurant.getOpeningTime());
+            restaurantDto.setClosingTime(restaurant.getClosingTime());
+            restaurantDto.setImage(fileEntityService.fileToByteArray(restaurant.getImage()));
+            restaurantDto.setDistance(distance);
+            restaurantDto.setMinServicePrice(minServicePrice);
+
+            orderDto.setRestaurant(restaurantDto);
+        }
+
         orderDto.setId(order.getId());
         orderDto.setTotalPrice(order.getTotalPrice());
         orderDto.setDate(order.getDate());
-        List<OrderProductDto> orderProductDtoList = convertOrderProductToDtoList(order);
+        orderDto.setStatus(order.getStatus());
 
+        List<OrderProductDto> orderProductDtoList = convertOrderProductToDtoList(order);
         orderDto.setOrderProducts(orderProductDtoList);
+
         return orderDto;
     }
+
 
     private static List<OrderProductDto> convertOrderProductToDtoList(Order order) {
         List<OrderProductDto> orderProductDtoList = new ArrayList<>();
@@ -229,5 +259,47 @@ public class OrderServiceImpl implements IOrderService {
         selectableContentDto.setSelectableContentOptionDtoList(selectableContentOptionList);
         return selectableContentDto;
     }
+
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
+
+    @Transactional
+    public void updateOrderStatus(Long orderId, OrderStatus newStatus) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new BaseException(new ErrorMessage(NO_RECORD_EXIST, "Order not found")));
+
+        order.setStatus(newStatus);
+
+        if (newStatus == OrderStatus.ON_THE_WAY) {
+            order.setProgress(0);
+        }
+
+        orderRepository.save(order);
+
+        String customerId = String.valueOf(order.getCustomer().getId());
+
+        OrderStatusUpdateDto updateDto = new OrderStatusUpdateDto(order.getId(), newStatus, order.getProgress());
+        messagingTemplate.convertAndSendToUser(customerId, "/queue/order-status", updateDto);
+    }
+
+    @Transactional
+    public void updateProgress(Long orderId, Integer newProgress) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new BaseException(new ErrorMessage(NO_RECORD_EXIST, "Order not found")));
+
+        order.setProgress(newProgress);
+        orderRepository.save(order);
+
+        String customerId = String.valueOf(order.getCustomer().getId());
+
+        OrderStatusUpdateDto updateDto = new OrderStatusUpdateDto(order.getId(), null, newProgress);
+        messagingTemplate.convertAndSendToUser(customerId, "/queue/order-status", updateDto);
+    }
+
+
+
+
+
+
 
 }

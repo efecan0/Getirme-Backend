@@ -12,18 +12,21 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Autowired
-    WebSocketAuthInterceptor webSocketAuthInterceptor;
+    private WebSocketAuthInterceptor webSocketAuthInterceptor;
 
     @Override
-    public void registerStompEndpoints(StompEndpointRegistry registry){
-        registry.addEndpoint("/ws").setAllowedOrigins("http://localhost:8081/**").addInterceptors(webSocketAuthInterceptor).withSockJS();
+    public void registerStompEndpoints(StompEndpointRegistry registry) {
+        registry.addEndpoint("/ws")
+                .setHandshakeHandler(new CustomHandshakeHandler()) // 💥 BURASI YENİ
+                .setAllowedOriginPatterns("*")
+                .addInterceptors(webSocketAuthInterceptor)
+                .withSockJS();
     }
 
     @Override
-    public void configureMessageBroker(MessageBrokerRegistry config){
-        config.enableSimpleBroker("/topic" , "/queue");
+    public void configureMessageBroker(MessageBrokerRegistry config) {
+        config.enableSimpleBroker("/topic", "/queue");
         config.setApplicationDestinationPrefixes("/app");
         config.setUserDestinationPrefix("/user");
     }
-
 }

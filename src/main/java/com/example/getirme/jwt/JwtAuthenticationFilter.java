@@ -15,7 +15,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import java.io.IOException;
 
 import static com.example.getirme.exception.MessageType.*;
@@ -76,5 +79,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throw new BaseException(new ErrorMessage(GENERAL_ERROR , null));
         }
         filterChain.doFilter(request, response);
+    }
+
+
+    public Authentication getAuthentication(String token) {
+        String phoneNumber = jwtService.getPhoneNumberByToken(token);
+        if (phoneNumber != null) {
+            UserDetails userDetails = userDetailsService.loadUserByUsername(phoneNumber);
+            return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        }
+        return null;
     }
 }

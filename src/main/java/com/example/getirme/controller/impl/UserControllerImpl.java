@@ -14,6 +14,7 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
@@ -47,5 +48,22 @@ public class UserControllerImpl extends BaseController implements IUserControlle
 
         return ok("Successfully Logined.");
     }
+
+    @GetMapping("/checkAuth")
+    public ResponseEntity<RootEntity<String>> checkAuth() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getDetails();
+
+        if (principal == null || principal.equals("anonymousUser")) {
+            return ok("NOT_AUTHENTICATED");
+        }
+
+        if (principal instanceof com.example.getirme.model.User user) {
+            String userType = user.getUserType(); // Burada zaten CUSTOMER mı RESTAURANT mı olduğunu biliyoruz
+            return ok("AUTHENTICATED_" + userType);
+        }
+
+        return ok("UNKNOWN");
+    }
+
 
 }
