@@ -3,6 +3,7 @@ package com.example.getirme.controller.impl;
 import com.example.getirme.controller.IOrderController;
 import com.example.getirme.dto.OrderDto;
 import com.example.getirme.dto.OrderDtoIU;
+import com.example.getirme.dto.UpdateOrderStatusDto;
 import com.example.getirme.exception.BaseException;
 import com.example.getirme.exception.ErrorMessage;
 import com.example.getirme.model.Customer;
@@ -13,6 +14,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -41,7 +43,7 @@ public class OrderControllerImpl extends BaseController implements IOrderControl
         }
         OrderDto savedOrder = orderService.createOrder(order , context);
         String userId = String.valueOf(order.getRestaurantId());
-        messagingTemplate.convertAndSendToUser(userId , "/queue/orders" , savedOrder);
+        messagingTemplate.convertAndSendToUser(userId , "/queue/order-status" , savedOrder);
         return ok("Order Created Successfully");
     }
 
@@ -58,4 +60,18 @@ public class OrderControllerImpl extends BaseController implements IOrderControl
         OrderDto response = orderService.getOrderDetails(id);
         return ok(response);
     }
+
+    @MessageMapping("/updateOrderStatus")
+    public void updateOrderStatus(UpdateOrderStatusDto dto) {
+        orderService.updateOrderStatus(dto.getOrderId(), dto.getNewStatus());
+    }
+
+    @PutMapping("/progress")
+    public ResponseEntity<RootEntity<String>> updateOrderProgress(@RequestParam Long orderId,
+                                                                  @RequestParam Integer progress) {
+        orderService.updateProgress(orderId, progress);
+        return ok("Order progress updated successfully.");
+    }
+
+
 }

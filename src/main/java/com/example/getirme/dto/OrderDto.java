@@ -1,5 +1,6 @@
 package com.example.getirme.dto;
 
+import com.example.getirme.model.OrderStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,6 +23,11 @@ public class OrderDto {
     private CustomerDto customer;
 
     private RestaurantDto restaurant;
+
+    private OrderStatus status;
+
+    private Integer progress;
+
 
     private List<OrderProductDto> orderProducts;
 }
