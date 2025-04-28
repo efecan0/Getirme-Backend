@@ -9,5 +9,5 @@ import java.util.List;
 public interface ICustomerService {
     void register(CustomerDtoIU customerDtoIU);
     LocationDto getCustomerLocation();
-
+    void updateCustomer(CustomerDtoIU customerDtoIU);
 }

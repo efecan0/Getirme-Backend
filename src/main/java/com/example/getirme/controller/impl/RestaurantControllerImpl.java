@@ -2,25 +2,24 @@ package com.example.getirme.controller.impl;
 
 import com.example.getirme.controller.IRestaurantController;
 import com.example.getirme.dto.*;
+import com.example.getirme.model.Restaurant;
 import com.example.getirme.model.RootEntity;
-import com.example.getirme.model.SelectableContentOption;
+import com.example.getirme.service.IFileEntityService;
 import com.example.getirme.service.IRestaurantService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.ui.Model;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
+
 
 @RestController
 @RequestMapping("/restaurant")
@@ -29,6 +28,9 @@ public class RestaurantControllerImpl extends BaseController implements IRestaur
 
     @Autowired
     IRestaurantService restaurantService;
+
+    @Autowired
+    IFileEntityService fileEntityService;
 
     @PostMapping("/register")
     @Override
@@ -58,6 +60,15 @@ public class RestaurantControllerImpl extends BaseController implements IRestaur
         }
     }
 
+    @PostMapping("/updateProduct/{id}")
+    @Override
+    public ResponseEntity<RootEntity<String>> updateProduct( @RequestPart("updateProductDtoIU") UpdateProductDtoIU updateProductDtoIU,
+                                                             @RequestPart(value = "image", required = false) MultipartFile image,
+                                                             @PathVariable("id") Long id ) {
+        restaurantService.updateProduct(updateProductDtoIU , image , id);
+        return ok("Product Updated Successfully.");
+    }
+
     @GetMapping("/list")
     @Override
     public ResponseEntity<RootEntity<List<RestaurantDto>>> getRestaurantList() {
@@ -76,6 +87,22 @@ public class RestaurantControllerImpl extends BaseController implements IRestaur
     @Override
     public ResponseEntity<RootEntity<ProductDetailsDto>> getProductDetails(@PathVariable Long id) {
         return ok(restaurantService.getProductDetails(id));
+    }
+
+    @PostMapping("/update")
+    @Override
+    public ResponseEntity<RootEntity<String>> updateRestaurant(@ModelAttribute RestaurantDtoIU restaurantDtoIU) {
+        Restaurant context = (Restaurant) SecurityContextHolder.getContext().getAuthentication().getDetails();
+        restaurantService.updateRestaurant(restaurantDtoIU , context.getId());
+        return ok("Updated successfully.");
+    }
+
+    @GetMapping("/getUserInfo")
+    @Override
+    public ResponseEntity<RootEntity<RestaurantDetailsDto>> getUserInfo() {
+        Restaurant context = (Restaurant) SecurityContextHolder.getContext().getAuthentication().getDetails();
+        //RestaurantDto restaurantDto = new RestaurantDto(context.getId(), context.getName(), context.getLocation(), context.getOpeningTime() , context.getClosingTime() , fileEntityService.fileToByteArray(context.getImage()) , context.getMaxServiceDistance().doubleValue() , context.getMinServicePricePerKm().doubleValue());
+        return getRestaurantDetails(context.getId());
     }
 
 

@@ -57,6 +57,16 @@ public class FileEntityServiceImpl implements IFileEntityService {
         }
     }
 
+    @Override
+    public void deleteFileFromDisk(FileEntity fileEntity) {
+        try {
+            Path filePath = Paths.get(uploadDir).resolve(fileEntity.getData());
+            Files.deleteIfExists(filePath);
+        }catch (IOException e){
+            throw new BaseException(new ErrorMessage(GENERAL_ERROR , "General Image Server Error"));
+        }
+    }
+
     public byte[] fileToByteArray(FileEntity fileEntity){
         try{
             Path filePath = Paths.get(uploadDir).resolve(fileEntity.getData());

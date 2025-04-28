@@ -55,6 +55,28 @@ public class CustomerServiceImpl implements ICustomerService {
     }
 
     @Override
+    public void updateCustomer(CustomerDtoIU customerDtoIU) {
+        Customer context = (Customer) SecurityContextHolder.getContext().getAuthentication().getDetails();
+        Customer customer = new Customer();
+        BeanUtils.copyProperties(customerDtoIU, customer);
+        if(customerDtoIU.getPhoneNumber() != null) {
+            customer.setPhoneNumber(customerDtoIU.getPhoneNumber().replaceAll(" " , ""));
+        }
+        else{
+            customer.setPhoneNumber(context.getPhoneNumber());
+        }
+        if(customerDtoIU.getPassword() != null) {
+            customer.setPassword(passwordEncoder.encode(customer.getPassword()));
+        }
+        else{
+            customer.setPassword(context.getPassword());
+        }
+
+        customer.setId(context.getId());
+        customerRepository.save(customer);
+    }
+
+    @Override
     public void register(CustomerDtoIU customerDtoIU) {
         Customer customer = new Customer();
         BeanUtils.copyProperties(customerDtoIU, customer);
@@ -62,4 +84,8 @@ public class CustomerServiceImpl implements ICustomerService {
         customer.setPassword(passwordEncoder.encode(customer.getPassword()));
         customerRepository.save(customer);
     }
+
+
+
+
 }

@@ -9,4 +9,5 @@ import java.net.URI;
 public interface IFileEntityService {
     FileEntity saveFileEntity(MultipartFile file);
     byte[] fileToByteArray(FileEntity fileEntity);
+    void deleteFileFromDisk(FileEntity fileEntity);
 }

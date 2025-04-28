@@ -7,7 +7,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -26,5 +27,13 @@ public interface IRestaurantController {
     ResponseEntity<RootEntity<RestaurantDetailsDto>> getRestaurantDetails(Long id);
 
     ResponseEntity<RootEntity<ProductDetailsDto>> getProductDetails(Long id);
+
+    ResponseEntity<RootEntity<String>> updateRestaurant(RestaurantDtoIU restaurantDtoIU);
+
+    ResponseEntity<RootEntity<RestaurantDetailsDto>> getUserInfo();
+
+    ResponseEntity<RootEntity<String>> updateProduct(UpdateProductDtoIU updateProductDtoIU,
+                                                     MultipartFile image,
+                                                     Long id);
 
 }

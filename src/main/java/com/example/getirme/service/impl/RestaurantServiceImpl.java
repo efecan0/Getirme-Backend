@@ -5,20 +5,21 @@ import com.example.getirme.exception.BaseException;
 import com.example.getirme.exception.ErrorMessage;
 import com.example.getirme.jwt.JwtService;
 import com.example.getirme.model.*;
-import com.example.getirme.repository.ProductRepository;
-import com.example.getirme.repository.RestaurantRepository;
-import com.example.getirme.repository.SelectableContentOptionRepository;
-import com.example.getirme.repository.SelectableContentRepository;
+import com.example.getirme.repository.*;
 import com.example.getirme.service.IFileEntityService;
 import com.example.getirme.service.IRestaurantService;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
@@ -51,9 +52,6 @@ public class RestaurantServiceImpl implements IRestaurantService {
 
     @Autowired
     private OpenStreetMapService openStreetMapService;
-
-    @Autowired
-    private JwtService jwtService;
 
     @Override
     public void registerRestaurant(RestaurantDtoIU restaurantDtoIU){
@@ -193,6 +191,81 @@ public class RestaurantServiceImpl implements IRestaurantService {
         }
         productDetailsDto.setSelectableContent(selectableContentDtoList);
         return productDetailsDto;
+    }
+    @Transactional
+    @Override
+    public void updateRestaurant(RestaurantDtoIU restaurantDtoIU , Long id) {
+        Restaurant context = (Restaurant) SecurityContextHolder.getContext().getAuthentication().getDetails();
+
+        if(restaurantDtoIU.getPhoneNumber() != null){
+            restaurantDtoIU.setPhoneNumber(restaurantDtoIU.getPhoneNumber().replaceAll(" " , ""));
+        } else{
+            restaurantDtoIU.setPhoneNumber(context.getPhoneNumber());
+        }
+
+        if(restaurantDtoIU.getPassword() != null){
+            restaurantDtoIU.setPassword(passwordEncoder.encode(restaurantDtoIU.getPassword()));
+        } else{
+            restaurantDtoIU.setPassword(context.getPassword());
+        }
+
+        FileEntity image;
+        if(restaurantDtoIU.getImage() != null){
+            image = fileEntityService.saveFileEntity(restaurantDtoIU.getImage());
+            fileEntityService.deleteFileFromDisk(context.getImage());
+        } else {
+            image = context.getImage();
+        }
+
+        restaurantRepository.updateRestaurant(
+                context.getId(),
+                restaurantDtoIU.getName(),
+                restaurantDtoIU.getPhoneNumber(),
+                restaurantDtoIU.getLocation(),
+                restaurantDtoIU.getPassword(),
+                restaurantDtoIU.getOpeningTime(),
+                restaurantDtoIU.getClosingTime(),
+                restaurantDtoIU.getMaxServiceDistance(),
+                restaurantDtoIU.getMinServicePricePerKm(),
+                image
+        );
+    }
+
+    @Override
+    public void updateProduct(UpdateProductDtoIU productDtoIU , MultipartFile image , Long id) {
+        Product product = new Product();
+        if(image != null){
+            product.setImage(fileEntityService.saveFileEntity(image));
+        }
+        else{
+            Product dbProduct = productRepository.findById(id).orElseThrow(() -> new BaseException(new ErrorMessage(NO_RECORD_EXIST , "Product not found")));
+            product.setImage(dbProduct.getImage());
+        }
+        product.setId(id);
+        product.setName(productDtoIU.getName());
+        product.setDescription(productDtoIU.getDescription());
+        product.setPrice(productDtoIU.getPrice());
+        List<SelectableContent> selectableContentList = new ArrayList<>();
+        for(SelectableContentDto selectableContentDto : productDtoIU.getSelectableContentDtoList()){
+            SelectableContent selectableContent = new SelectableContent();
+            selectableContent.setId(selectableContentDto.getId());
+            selectableContent.setName(selectableContentDto.getName());
+            List<SelectableContentOption> selectableContentOptionList = new ArrayList<>();
+            for(SelectableContentOptionDto selectableContentOptionDto : selectableContentDto.getSelectableContentOptionDtoList()){
+                SelectableContentOption selectableContentOption = new SelectableContentOption();
+                selectableContentOption.setId(selectableContentOptionDto.getId());
+                selectableContentOption.setName(selectableContentOptionDto.getName());
+                selectableContentOption.setPrice(selectableContentOptionDto.getPrice());
+                selectableContentOptionList.add(selectableContentOption);
+            }
+            List<SelectableContentOption> savedOptions = selectableContentOptionRepository.saveAll(selectableContentOptionList);
+            selectableContent.setOptions(savedOptions);
+            selectableContentList.add(selectableContent);
+        }
+        List<SelectableContent> savedSelectableContents = selectableContentRepository.saveAll(selectableContentList);
+        product.setSelectableContents(savedSelectableContents);
+
+        productRepository.save(product);
     }
 
     private static SelectableContentDto getSelectableContentDto(SelectableContent selectableContent) {
