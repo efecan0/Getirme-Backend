@@ -101,8 +101,10 @@ public class RestaurantControllerImpl extends BaseController implements IRestaur
     @Override
     public ResponseEntity<RootEntity<RestaurantDetailsDto>> getUserInfo() {
         Restaurant context = (Restaurant) SecurityContextHolder.getContext().getAuthentication().getDetails();
-        //RestaurantDto restaurantDto = new RestaurantDto(context.getId(), context.getName(), context.getLocation(), context.getOpeningTime() , context.getClosingTime() , fileEntityService.fileToByteArray(context.getImage()) , context.getMaxServiceDistance().doubleValue() , context.getMinServicePricePerKm().doubleValue());
-        return getRestaurantDetails(context.getId());
+        ResponseEntity<RootEntity<RestaurantDetailsDto>> restaurantDetailsDto = getRestaurantDetails(context.getId());
+        restaurantDetailsDto.getBody().getData().getRestaurant().setMinServicePrice(context.getMinServicePricePerKm().doubleValue());
+        restaurantDetailsDto.getBody().getData().getRestaurant().setDistance(context.getMaxServiceDistance().doubleValue());
+        return restaurantDetailsDto;
     }
 
 

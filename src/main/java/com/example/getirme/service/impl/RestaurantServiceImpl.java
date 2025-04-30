@@ -3,28 +3,19 @@ package com.example.getirme.service.impl;
 import com.example.getirme.dto.*;
 import com.example.getirme.exception.BaseException;
 import com.example.getirme.exception.ErrorMessage;
-import com.example.getirme.jwt.JwtService;
 import com.example.getirme.model.*;
 import com.example.getirme.repository.*;
 import com.example.getirme.service.IFileEntityService;
 import com.example.getirme.service.IRestaurantService;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static com.example.getirme.exception.MessageType.*;
