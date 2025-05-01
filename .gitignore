@@ -35,3 +35,6 @@ out/
 
 ### VS Code ###
 .vscode/
+
+images/*
+*/application.properties
