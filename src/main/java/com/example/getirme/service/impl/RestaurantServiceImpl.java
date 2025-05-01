@@ -43,6 +43,8 @@ public class RestaurantServiceImpl implements IRestaurantService {
 
     @Autowired
     private OpenStreetMapService openStreetMapService;
+    @Autowired
+    private FileEntityRepository fileEntityRepository;
 
     @Override
     public void registerRestaurant(RestaurantDtoIU restaurantDtoIU){
@@ -88,15 +90,8 @@ public class RestaurantServiceImpl implements IRestaurantService {
                         List<SelectableContentOption> selectableContentOptionList = new ArrayList<>();
                         //loop List of SelectableContentOptions for SelectableContent names
                         for(SelectableContentOptionDtoIU value : productDtoIU.getSelectableContentOptions().get(key)){
-                            //if we have a same SelectableContentOption in database just add to selectableContentOptionList.
-                            //else save database and add list.
-                            Optional<SelectableContentOption> optional = selectableContentOptionRepository.findByNameAndPrice(value.getName() , value.getPrice());
-                            if(optional.isPresent()){
-                                selectableContentOptionList.add(optional.get());
-                            }else{
                                 SelectableContentOption savedOption =  selectableContentOptionRepository.save(new SelectableContentOption(null , value.getName(), value.getPrice()));
                                 selectableContentOptionList.add(savedOption);
-                            }
                         }
 
                         SelectableContent savedSelectableContent = selectableContentRepository.save(new SelectableContent(null , key , selectableContentOptionList));
@@ -271,6 +266,35 @@ public class RestaurantServiceImpl implements IRestaurantService {
         }
         selectableContentDto.setSelectableContentOptionDtoList(selectableContentOptionDtoList);
         return selectableContentDto;
+    }
+
+    @Override
+    public void deleteProduct(Long id){
+        Restaurant context = (Restaurant) SecurityContextHolder.getContext().getAuthentication().getDetails();
+        Product product =  productRepository.findById(id).orElseThrow(() -> new BaseException(new ErrorMessage(NO_RECORD_EXIST , "Product not found")));
+        Restaurant restaurant = restaurantRepository.findById(context.getId()).orElseThrow(() -> new BaseException(new ErrorMessage(NO_RECORD_EXIST , "Restaurant not found")));
+
+        restaurant.getProducts().remove(product);
+        restaurantRepository.save(restaurant);
+
+        FileEntity fileEntity = product.getImage();
+
+
+        if(fileEntity != null){
+            product.setImage(null);
+            fileEntityRepository.delete(fileEntity);
+            fileEntityService.deleteFileFromDisk(fileEntity);
+        }
+        for(SelectableContent selectableContent : product.getSelectableContents()){
+            List<SelectableContentOption> options = new ArrayList<>(selectableContent.getOptions());
+            selectableContent.getOptions().clear();
+            selectableContentOptionRepository.deleteAll(options);
+        }
+        List<SelectableContent> selectableContents = new ArrayList<>(product.getSelectableContents());
+        product.getSelectableContents().clear();
+        selectableContentRepository.deleteAll(selectableContents);
+        productRepository.delete(product);
+
     }
 
 

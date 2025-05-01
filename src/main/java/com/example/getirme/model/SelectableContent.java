@@ -21,6 +21,6 @@ public class SelectableContent {
 
     private String name;
 
-    @ManyToMany
+    @OneToMany
     private List<SelectableContentOption> options;
 }

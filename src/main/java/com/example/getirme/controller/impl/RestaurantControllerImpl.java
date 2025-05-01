@@ -107,5 +107,11 @@ public class RestaurantControllerImpl extends BaseController implements IRestaur
         return restaurantDetailsDto;
     }
 
+    @PostMapping("/deleteProduct/{id}")
+    @Override
+    public ResponseEntity<RootEntity<String>> deleteProduct(@PathVariable Long id){
+        restaurantService.deleteProduct(id);
+        return ok("Deleted Successfully.");
+    }
 
 }
