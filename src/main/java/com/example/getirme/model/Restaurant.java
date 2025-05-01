@@ -30,7 +30,7 @@ public class Restaurant extends User {
 
     private Integer minServicePricePerKm;
 
-    @ManyToMany
+    @OneToMany
     private List<Product> products;
 
     @OneToOne

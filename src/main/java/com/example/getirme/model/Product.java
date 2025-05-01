@@ -31,7 +31,7 @@ public class Product {
     @OneToOne
     private FileEntity image;
 
-    @ManyToMany
+    @OneToMany
     private List<SelectableContent> selectableContents;
 
 }

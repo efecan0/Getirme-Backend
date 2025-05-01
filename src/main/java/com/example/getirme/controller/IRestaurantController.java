@@ -36,4 +36,6 @@ public interface IRestaurantController {
                                                      MultipartFile image,
                                                      Long id);
 
+    ResponseEntity<RootEntity<String>> deleteProduct(Long id);
+
 }
