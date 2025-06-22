@@ -22,8 +22,6 @@ public class OrderProductDtoIU {
     @NotNull(message = "Product ID cannot be null")
     private Long productId;
 
-    @NotEmpty(message = "Selectable content map cannot be empty")
     private Map<Long, List<Long>> selectableContentMap;
-
 }
 

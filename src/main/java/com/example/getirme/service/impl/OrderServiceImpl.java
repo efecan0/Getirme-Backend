@@ -296,10 +296,4 @@ public class OrderServiceImpl implements IOrderService {
         messagingTemplate.convertAndSendToUser(customerId, "/queue/order-status", updateDto);
     }
 
-
-
-
-
-
-
 }
