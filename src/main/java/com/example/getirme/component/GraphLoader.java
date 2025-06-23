@@ -1,4 +1,4 @@
-package com.example.getirme.routing;
+package com.example.getirme.component;
 
 import de.topobyte.osm4j.core.access.OsmIterator;
 import de.topobyte.osm4j.core.model.iface.EntityType;
@@ -16,7 +16,6 @@ import org.springframework.stereotype.Component;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Comparator;
-import java.util.List;
 
 @Component
 public class GraphLoader {
@@ -26,7 +25,7 @@ public class GraphLoader {
             new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
 
     /** nodeId → [lat, lon] */
-    final Long2ObjectMap<double[]> coords = new Long2ObjectOpenHashMap<>();
+    public final Long2ObjectMap<double[]> coords = new Long2ObjectOpenHashMap<>();
 
     @PostConstruct
     void load() throws IOException {
@@ -88,7 +87,7 @@ public class GraphLoader {
         graph.setEdgeWeight(e, haversine(c1[0], c1[1], c2[0], c2[1]));
     }
 
-    static double haversine(double lat1, double lon1, double lat2, double lon2) {
+    public static double haversine(double lat1, double lon1, double lat2, double lon2) {
         double R = 6_371_000;
         double dLat = Math.toRadians(lat2 - lat1);
         double dLon = Math.toRadians(lon2 - lon1);

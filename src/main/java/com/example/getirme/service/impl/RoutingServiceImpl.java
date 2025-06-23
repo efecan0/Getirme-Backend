@@ -1,5 +1,7 @@
-package com.example.getirme.routing;
+package com.example.getirme.service.impl;
 
+import com.example.getirme.component.GraphLoader;
+import com.example.getirme.service.IRoutingService;
 import lombok.RequiredArgsConstructor;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.interfaces.AStarAdmissibleHeuristic;
@@ -11,10 +13,11 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class RoutingService {
+public class RoutingServiceImpl implements IRoutingService {
 
     private final GraphLoader loader;
 
+    @Override
     public GraphPath<Long, DefaultWeightedEdge> route(
             double slat, double slon, double dlat, double dlon) {
 
@@ -31,6 +34,7 @@ public class RoutingService {
     }
 
     /** Lat-lon çiftlerine dönüştür */
+    @Override
     public List<double[]> toLatLng(GraphPath<Long, DefaultWeightedEdge> p) {
         return p.getVertexList().stream()
                 .map(id -> loader.coords.get(id))

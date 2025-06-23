@@ -16,6 +16,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     protected static final String LOGIN_URL = "/login";
+    protected static final String ROUTE_TEST = "/route";
     protected static final String RESTAURANT_REGISTER_URL = "/restaurant/register";
     protected static final String CUSTOMER_REGISTER_URL = "/customer/register";
     protected static final String REFRESH_TOKEN_URL = "/refreshToken";
@@ -31,7 +32,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers(LOGIN_URL, RESTAURANT_REGISTER_URL, REFRESH_TOKEN_URL, CUSTOMER_REGISTER_URL, WEBSOCKET_URL).permitAll()
+                        .requestMatchers(ROUTE_TEST, LOGIN_URL, RESTAURANT_REGISTER_URL, REFRESH_TOKEN_URL, CUSTOMER_REGISTER_URL, WEBSOCKET_URL).permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
