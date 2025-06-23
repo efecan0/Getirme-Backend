@@ -7,6 +7,7 @@ import org.jgrapht.GraphPath;
 import org.jgrapht.alg.interfaces.AStarAdmissibleHeuristic;
 import org.jgrapht.alg.shortestpath.AStarShortestPath;
 import org.jgrapht.graph.DefaultWeightedEdge;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,12 +18,24 @@ public class RoutingServiceImpl implements IRoutingService {
 
     private final GraphLoader loader;
 
+    @Autowired
+    OpenStreetMapService openStreetMapService;
+
     @Override
     public GraphPath<Long, DefaultWeightedEdge> route(
-            double slat, double slon, double dlat, double dlon) {
+            String address1, String address2) {
 
-        long src = loader.nearest(slat, slon);
-        long dst = loader.nearest(dlat, dlon);
+        String[] coords1 = openStreetMapService.getCoordinates(address1);
+        String[] coords2 = openStreetMapService.getCoordinates(address2);
+
+        Double lat1 = Double.parseDouble(coords1[0]);
+        Double lon1 = Double.parseDouble(coords1[1]);
+        Double lat2 = Double.parseDouble(coords2[0]);
+        Double lon2 = Double.parseDouble(coords2[1]);
+
+
+        long src = loader.nearest(lat1, lon1);
+        long dst = loader.nearest(lat2, lon2);
 
         AStarAdmissibleHeuristic<Long> h = (u, v) -> {
             double[] cu = loader.coords.get(u);

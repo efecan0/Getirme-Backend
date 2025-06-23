@@ -6,6 +6,6 @@ import org.jgrapht.graph.DefaultWeightedEdge;
 import java.util.List;
 
 public interface IRoutingService {
-    GraphPath<Long, DefaultWeightedEdge> route(double slat, double slon, double dlat, double dlon);
+    GraphPath<Long, DefaultWeightedEdge> route(String address1, String address2);
     List<double[]> toLatLng(GraphPath<Long, DefaultWeightedEdge> p);
 }
